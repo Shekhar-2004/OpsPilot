@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core import deps
 from app.core import security
 from app.models.models import User
-from app.schemas.schemas import UserCreate, UserResponse, TokenResponse, UserLogin
+from app.schemas.schemas import UserCreate, UserResponse, TokenResponse, UserLogin, UserUpdate
 
 router = APIRouter()
 
@@ -72,4 +72,19 @@ def login_json(
 
 @router.get("/me", response_model=UserResponse)
 def read_current_user(current_user: User = Depends(deps.get_current_active_user)):
+    return current_user
+
+@router.put("/profile", response_model=UserResponse)
+def update_profile(
+    profile_in: UserUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    if profile_in.name is not None:
+        current_user.name = profile_in.name
+    if profile_in.role is not None:
+        current_user.role = profile_in.role
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
     return current_user

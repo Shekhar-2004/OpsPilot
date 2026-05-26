@@ -91,9 +91,19 @@ export default function App() {
     setUser(null);
   };
 
-  const handleUpdateProfile = (updatedUser) => {
-    setUser(updatedUser);
-    localStorage.setItem('opspilot_custom_user', JSON.stringify(updatedUser));
+  const handleUpdateProfile = async (updatedFields) => {
+    try {
+      const updatedUser = await authService.updateProfile(updatedFields.name, updatedFields.role);
+      const newCustomUser = {
+        ...updatedUser,
+        avatar: updatedFields.avatar
+      };
+      setUser(newCustomUser);
+      localStorage.setItem('opspilot_custom_user', JSON.stringify(newCustomUser));
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.detail || "Failed to update profile details in database.");
+    }
   };
 
   if (loading) {

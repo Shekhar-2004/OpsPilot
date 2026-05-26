@@ -47,6 +47,17 @@ export const authService = {
   logout: () => {
     localStorage.removeItem('opspilot_token');
     localStorage.removeItem('opspilot_user');
+  },
+  updateProfile: async (name, role) => {
+    const response = await api.put('/auth/profile', { name, role });
+    const storedUser = localStorage.getItem('opspilot_user');
+    if (storedUser) {
+      const userObj = JSON.parse(storedUser);
+      userObj.name = response.data.name;
+      userObj.role = response.data.role;
+      localStorage.setItem('opspilot_user', JSON.stringify(userObj));
+    }
+    return response.data;
   }
 };
 
@@ -65,6 +76,10 @@ export const teamService = {
   },
   addMember: async (teamId, email) => {
     const response = await api.post(`/teams/${teamId}/members`, { email });
+    return response.data;
+  },
+  join: async (inviteCode) => {
+    const response = await api.post('/teams/join', { invite_code: inviteCode });
     return response.data;
   }
 };

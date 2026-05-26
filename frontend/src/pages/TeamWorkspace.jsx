@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { teamService, taskService } from '../services/api';
 import StatusBadge from '../components/badges/StatusBadge';
-import { Plus, Users, ArrowRight, UserPlus, Trash2, Clock } from 'lucide-react';
+import { Plus, Users, ArrowRight, UserPlus, Trash2, Clock, Copy } from 'lucide-react';
 
 export default function TeamWorkspace({ user }) {
   const [teams, setTeams] = useState([]);
@@ -28,6 +28,11 @@ export default function TeamWorkspace({ user }) {
   
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [joinInviteCode, setJoinInviteCode] = useState('');
+  const [newTeamName, setNewTeamName] = useState('');
+  const [newTeamDesc, setNewTeamDesc] = useState('');
 
   useEffect(() => {
     fetchTeams();
@@ -119,6 +124,53 @@ export default function TeamWorkspace({ user }) {
     }
   };
 
+  const handleJoinTeam = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const joinedTeam = await teamService.join(joinInviteCode);
+      const allTeams = await teamService.list();
+      setTeams(allTeams);
+      const found = allTeams.find(t => t.id === joinedTeam.id);
+      if (found) {
+        setSelectedTeam(found);
+      } else {
+        setSelectedTeam(joinedTeam);
+      }
+      setShowJoinModal(false);
+      setJoinInviteCode('');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to join team. Make sure the code is correct.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateTeam = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const newT = await teamService.create(newTeamName, newTeamDesc || "Operational workgroup");
+      const allTeams = await teamService.list();
+      setTeams(allTeams);
+      const found = allTeams.find(t => t.id === newT.id);
+      if (found) {
+        setSelectedTeam(found);
+      } else {
+        setSelectedTeam(newT);
+      }
+      setShowCreateModal(false);
+      setNewTeamName('');
+      setNewTeamDesc('');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to create team.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleStatusChange = async (taskId, newStatus) => {
     try {
       const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t);
@@ -144,30 +196,135 @@ export default function TeamWorkspace({ user }) {
 
   if (teams.length === 0 && !loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center max-w-md mx-auto space-y-4">
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center max-w-md mx-auto space-y-5">
         <Users className="w-16 h-16 text-on-surface-variant/60" />
-        <h3 className="text-xl font-display text-primary">No Workspaces Found</h3>
-        <p className="text-on-surface-variant text-sm">
-          You are not currently assigned to any operational teams. If you are an Admin or Coordinator, you can initialize a new team workspace below.
+        <h3 className="text-2xl font-display text-primary tracking-tight">No Workspaces Found</h3>
+        <p className="text-on-surface-variant text-xs font-sans leading-relaxed">
+          You are not currently assigned to any operational teams. You can join an existing workspace if you have an invitation key, or create one if you hold coordinator clearance.
         </p>
-        {['admin', 'coordinator'].includes(user.role) && (
+        <div className="flex flex-wrap items-center justify-center gap-3 w-full pt-2">
           <button
-            onClick={async () => {
-              const name = prompt("Enter team workspace name (e.g. hackathon-design):");
-              if (name) {
-                try {
-                  const newT = await teamService.create(name, "Operational workgroup");
-                  setTeams([newT]);
-                  setSelectedTeam(newT);
-                } catch (err) {
-                  alert(err.response?.data?.detail || "Error creating team");
-                }
-              }
-            }}
-            className="px-4 py-2 bg-primary hover:opacity-90 rounded-lg text-on-primary font-semibold text-sm transition-all cursor-pointer"
+            onClick={() => { setError(''); setShowJoinModal(true); }}
+            className="px-4.5 py-2.5 bg-surface-container-low hover:bg-surface-container-high border border-outline-variant/30 rounded-lg text-primary font-semibold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-2"
           >
-            Create First Workspace
+            <UserPlus className="w-3.5 h-3.5" />
+            Join with Key
           </button>
+          
+          {['admin', 'coordinator'].includes(user.role) && (
+            <button
+              onClick={() => { setError(''); setShowCreateModal(true); }}
+              className="px-4.5 py-2.5 bg-primary hover:opacity-90 rounded-lg text-on-primary font-semibold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Create Workspace
+            </button>
+          )}
+        </div>
+
+        {/* Modular inline modals for empty state */}
+        {showJoinModal && (
+          <div className="fixed inset-0 bg-primary/25 backdrop-blur-xs flex items-center justify-center p-4 z-50 text-left">
+            <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/40 p-6 rounded-xxl relative shadow-md">
+              <h3 className="text-xl font-display text-primary mb-2">Join Operational Workspace</h3>
+              <p className="text-xs text-on-surface-variant mb-4">Enter a secure 6-character team key to access shared deliverables and organizational memory.</p>
+
+              {error && (
+                <div className="mb-4 p-3 bg-error-container/20 border border-error/30 rounded-xl text-xs text-error font-semibold">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleJoinTeam} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Invitation Code / Team Key</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. SPONS1"
+                    value={joinInviteCode}
+                    onChange={(e) => setJoinInviteCode(e.target.value.toUpperCase())}
+                    className="w-full console-input pl-2 py-2 text-primary font-mono font-bold tracking-widest text-center text-lg bg-surface"
+                    maxLength={15}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowJoinModal(false)}
+                    className="px-4 py-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm text-primary font-semibold transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-4 py-2 bg-primary hover:opacity-90 rounded-lg text-sm text-on-primary font-semibold transition-all cursor-pointer"
+                  >
+                    {submitting ? 'Joining...' : 'Join Workspace'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-primary/25 backdrop-blur-xs flex items-center justify-center p-4 z-50 text-left">
+            <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/40 p-6 rounded-xxl relative shadow-md">
+              <h3 className="text-xl font-display text-primary mb-2">Initialize Workspace</h3>
+              <p className="text-xs text-on-surface-variant mb-4">Establish a new operational workgroup channel. You will automatically be assigned as coordinator.</p>
+
+              {error && (
+                <div className="mb-4 p-3 bg-error-container/20 border border-error/30 rounded-xl text-xs text-error font-semibold">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateTeam} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Workspace Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. sponsorship-ops"
+                    value={newTeamName}
+                    onChange={(e) => setNewTeamName(e.target.value)}
+                    className="w-full console-input pl-2 py-2 text-primary bg-surface"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Description (Optional)</label>
+                  <textarea
+                    placeholder="Provide brief context regarding this team's scope..."
+                    value={newTeamDesc}
+                    onChange={(e) => setNewTeamDesc(e.target.value)}
+                    rows={2}
+                    className="w-full console-input pl-2 py-2 text-primary resize-none bg-surface"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="px-4 py-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm text-primary font-semibold transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-4 py-2 bg-primary hover:opacity-90 rounded-lg text-sm text-on-primary font-semibold transition-all cursor-pointer"
+                  >
+                    {submitting ? 'Initializing...' : 'Create Workspace'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -179,34 +336,74 @@ export default function TeamWorkspace({ user }) {
     <div className="space-y-6">
       
       {/* Workspace Selector Panel */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-surface-container border border-outline-variant/30 p-4 rounded-xxl">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-surface-container border border-outline-variant/30 p-4 rounded-xxl font-sans">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-secondary-container/10 border border-secondary/30 flex items-center justify-center">
             <Users className="w-5 h-5 text-secondary" />
           </div>
           <div>
             <span className="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider block">Operational Workspace</span>
-            <select
-              value={selectedTeam?.id || ''}
-              onChange={(e) => {
-                const team = teams.find(t => t.id === parseInt(e.target.value));
-                if (team) setSelectedTeam(team);
-              }}
-              className="bg-transparent border-0 text-2xl font-display font-bold text-primary focus:ring-0 cursor-pointer pr-8 pl-0 py-0 appearance-none outline-none"
-            >
-              {teams.map(t => (
-                <option key={t.id} value={t.id} className="bg-bg text-primary font-semibold text-sm">{t.name}</option>
-              ))}
-            </select>
+            <div className="flex flex-col">
+              <select
+                value={selectedTeam?.id || ''}
+                onChange={(e) => {
+                  const team = teams.find(t => t.id === parseInt(e.target.value));
+                  if (team) setSelectedTeam(team);
+                }}
+                className="bg-transparent border-0 text-2xl font-display font-bold text-primary focus:ring-0 cursor-pointer pr-8 pl-0 py-0 appearance-none outline-none leading-none"
+              >
+                {teams.map(t => (
+                  <option key={t.id} value={t.id} className="bg-bg text-primary font-semibold text-sm">{t.name}</option>
+                ))}
+              </select>
+              {selectedTeam?.invite_code && (
+                <div className="flex items-center gap-1.5 mt-1 text-[11px] text-on-surface-variant font-medium">
+                  <span>Workspace Key:</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedTeam.invite_code);
+                      alert("Workspace invitation code copied to clipboard!");
+                    }}
+                    className="flex items-center gap-1 px-1.5 py-0.5 bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant/30 rounded font-mono text-[10px] font-bold text-secondary cursor-pointer transition-colors"
+                    title="Click to copy invite code"
+                  >
+                    <Copy className="w-2.5 h-2.5 text-on-surface-variant/80" />
+                    {selectedTeam.invite_code}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => { setError(''); setShowJoinModal(true); }}
+            className="px-3.5 py-2 bg-surface-container-low hover:bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm text-primary font-semibold transition-all flex items-center gap-1.5 cursor-pointer animate-none"
+            title="Join another workspace with invite code"
+          >
+            <UserPlus className="w-4 h-4 text-on-surface-variant" />
+            Join Team
+          </button>
+
+          {['admin', 'coordinator'].includes(user.role) && (
+            <button
+              onClick={() => { setError(''); setShowCreateModal(true); }}
+              className="px-3.5 py-2 bg-surface-container-low hover:bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm text-primary font-semibold transition-all flex items-center gap-1.5 cursor-pointer animate-none"
+              title="Create a new workspace"
+            >
+              <Plus className="w-4 h-4 text-on-surface-variant" />
+              New Team
+            </button>
+          )}
+
+          <div className="w-px h-6 bg-outline-variant/30 mx-1 hidden sm:block"></div>
+
           <button
             onClick={() => setShowMemberModal(true)}
             className="px-3.5 py-2 bg-surface-container-low hover:bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm text-primary font-semibold transition-all flex items-center gap-2 cursor-pointer"
           >
-            <UserPlus className="w-4 h-4 text-on-surface-variant" />
+            <Users className="w-4 h-4 text-on-surface-variant" />
             Members ({members.length})
           </button>
           
@@ -477,6 +674,112 @@ export default function TeamWorkspace({ user }) {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Join Team Modal */}
+      {showJoinModal && (
+        <div className="fixed inset-0 bg-primary/25 backdrop-blur-xs flex items-center justify-center p-4 z-50 text-left">
+          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/40 p-6 rounded-xxl relative shadow-md">
+            <h3 className="text-xl font-display text-primary mb-2">Join Operational Workspace</h3>
+            <p className="text-xs text-on-surface-variant mb-4">Enter a secure 6-character team key to access shared deliverables and organizational memory.</p>
+
+            {error && (
+              <div className="mb-4 p-3 bg-error-container/20 border border-error/30 rounded-xl text-xs text-error font-semibold">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleJoinTeam} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Invitation Code / Team Key</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. SPONS1"
+                  value={joinInviteCode}
+                  onChange={(e) => setJoinInviteCode(e.target.value.toUpperCase())}
+                  className="w-full console-input pl-2 py-2 text-primary font-mono font-bold tracking-widest text-center text-lg bg-surface"
+                  maxLength={15}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowJoinModal(false)}
+                  className="px-4 py-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm text-primary font-semibold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-primary hover:opacity-90 rounded-lg text-sm text-on-primary font-semibold transition-all cursor-pointer"
+                >
+                  {submitting ? 'Joining...' : 'Join Workspace'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Team Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-primary/25 backdrop-blur-xs flex items-center justify-center p-4 z-50 text-left">
+          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant/40 p-6 rounded-xxl relative shadow-md">
+            <h3 className="text-xl font-display text-primary mb-2">Initialize Workspace</h3>
+            <p className="text-xs text-on-surface-variant mb-4">Establish a new operational workgroup channel. You will automatically be assigned as coordinator.</p>
+
+            {error && (
+              <div className="mb-4 p-3 bg-error-container/20 border border-error/30 rounded-xl text-xs text-error font-semibold">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateTeam} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Workspace Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. sponsorship-ops"
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  className="w-full console-input pl-2 py-2 text-primary bg-surface"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Description (Optional)</label>
+                <textarea
+                  placeholder="Provide brief context regarding this team's scope..."
+                  value={newTeamDesc}
+                  onChange={(e) => setNewTeamDesc(e.target.value)}
+                  rows={2}
+                  className="w-full console-input pl-2 py-2 text-primary resize-none bg-surface"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm text-primary font-semibold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-primary hover:opacity-90 rounded-lg text-sm text-on-primary font-semibold transition-all cursor-pointer"
+                >
+                  {submitting ? 'Initializing...' : 'Create Workspace'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
