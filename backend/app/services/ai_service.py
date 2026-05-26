@@ -99,18 +99,13 @@ class AIService:
         
         prompt = (
             "You are Antigravity, the premium AI Operations Coordinator inside the OpsPilot dashboard.\n"
-            "Your job is to answer the user's operational query by synthesizing a clear, helpful, and highly rich analysis based on the grounded workspace context provided below.\n\n"
+            "Your job is to answer the user's operational query directly, concisely, and with extreme polish using the grounded workspace context provided below.\n\n"
             "Rules:\n"
-            "1. Always base your response strictly on the provided grounded database context.\n"
-            "2. Structure your answer beautifully with markdown headers, lists, and tables.\n"
-            "3. Highlight critical statuses using GitHub alert blocks:\n"
-            "   - Use `> [!CAUTION]` if there is a critical blocked task.\n"
-            "   - Use `> [!WARNING]` if there are overdue or high-priority slips.\n"
-            "   - Use `> [!NOTE]` if everything is healthy and optimal.\n"
-            "4. If the query asks about tasks, represent them in a clean Markdown Table (columns: ID, Task Name, Status, Priority, Owner, Deadline).\n"
-            "5. Extract implicit action items or follow-ups from retrieved memory document chunks if appropriate.\n"
-            "6. Provide clear, numbered coordinator recommendations at the end.\n"
-            "7. Keep a highly professional, encouraging, and operational intelligence coordinator tone.\n\n"
+            "1. Provide a direct, clear, and highly focused answer at the very beginning. Avoid verbose introductions.\n"
+            "2. Keep the formatting clean and elegant. Do not output repetitive alert boxes, hallucination metrics, or unnecessary tables unless specifically requested.\n"
+            "3. If the query relates to tasks, represent them in a simple Markdown Table (ID, Task Name, Status, Priority, Owner, Deadline).\n"
+            "4. If relevant, output a concise list of 1-3 direct recommendations at the end.\n"
+            "5. Ground your answer strictly in the provided context. If the query cannot be answered by the context, state it clearly.\n\n"
             f"Grounded Context:\n{context_str}\n\n"
             f"User Query: {query}\n\n"
             "Synthesized Response:"
@@ -217,104 +212,49 @@ class AIService:
                     "extracted_tasks": cls.extract_actionable_tasks(gemini_answer)
                 }
             
-            # Simulate high-quality, grounded LLM synthesis
-            answer_lines = [
-                f"# 🚀 OpsPilot Intelligence Report",
-                f"### Analysis for query: *\"{query}\"*\n",
-                f"I processed **{len(matching_tasks)} active relational task(s)** and **{len(semantic_matches)} semantic memory segment(s)** matching your request. Here is the operational synthesis:\n"
-            ]
-
-            # 1. Add alert boxes based on status
-            overdue = [t for t in matching_tasks if t.status != "done" and t.deadline and any(k in t.deadline.lower() for k in ["overdue", "yesterday", "passed"])]
-            blocked = [t for t in matching_tasks if t.status == "blocked"]
+            # Clean, direct simulated synthesis
+            matched_sentences = []
+            for chunk, score in semantic_matches:
+                # Split content into sentences
+                sentences = [s.strip() for s in chunk.content.replace("\n", ". ").split(". ") if s.strip()]
+                for s in sentences:
+                    # If sentence matches any query keywords, prioritize it
+                    if any(w in s.lower() for w in query_lower.split()) and len(s) > 15:
+                        matched_sentences.append(s)
             
-            if blocked:
-                answer_lines.append(
-                    f"> [!CAUTION]\n"
-                    f"> **CRITICAL SYSTEM BLOCKER**: Detected {len(blocked)} blocked execution item(s) that require immediate coordinator attention! (e.g. *\"{blocked[0].title}\"*)."
-                )
-            elif overdue:
-                answer_lines.append(
-                    f"> [!WARNING]\n"
-                    f"> **SCHEDULE SLIPPAGE**: Detected {len(overdue)} overdue task(s). Timelines need validation to preserve event deadlines."
-                )
-            else:
-                answer_lines.append(
-                    f"> [!NOTE]\n"
-                    f"> **SYSTEM OPTIMAL**: Grounded databases show healthy operational status with zero active execution blockages."
-                )
-
-            # 2. Relational Task Metrics Table
-            if matching_tasks:
-                answer_lines.append("\n## 📋 Active Task Registry")
-                answer_lines.append("| ID | Task Name | Status | Priority | Owner | Deadline |")
-                answer_lines.append("| :--- | :--- | :--- | :--- | :--- | :--- |")
-                for t in matching_tasks[:5]:
-                    owner_name = t.owner.name if t.owner else "*Unassigned*"
-                    status_badge = f"🟢 DONE" if t.status.value == "done" else \
-                                   f"🔴 BLOCKED" if t.status.value == "blocked" else \
-                                   f"🔵 {t.status.value.upper().replace('_', ' ')}"
-                    priority_badge = f"🔥 {t.priority.value.upper()}" if t.priority.value in ["critical", "high"] else f"⚡ {t.priority.value.upper()}"
-                    answer_lines.append(
-                        f"| `#{t.id}` | **{t.title}** | {status_badge} | {priority_badge} | {owner_name} | *{t.deadline or 'N/A'}* |"
-                    )
-            
-            # 3. Semantic Memory Snippets
-            if semantic_matches:
-                answer_lines.append("\n## 🧠 Retrieved Organizational Memory")
+            # Fallback if no specific sentence matched keywords
+            if not matched_sentences:
                 for chunk, score in semantic_matches:
-                    doc_name = chunk.document.file_name
-                    answer_lines.append(
-                        f"### 📄 From: *{doc_name}* (Semantic Similarity Match: `{score * 100:.1f}%`)\n"
-                        f"> \"... {chunk.content.strip()} ...\"\n"
-                    )
-                    # Extract any tasks in the text
-                    new_tasks = cls.extract_actionable_tasks(chunk.content)
-                    extracted_tasks.extend(new_tasks)
-
-            # 4. Action Items
-            if extracted_tasks:
-                answer_lines.append("\n## ⚡ AI-Extracted Action Items")
-                answer_lines.append("I detected the following implicit assignments and due dates in the retrieved text logs:")
-                for et in extracted_tasks[:4]:
-                    answer_lines.append(
-                        f"- [ ] **{et['title']}**\n"
-                        f"  - **Candidate Assignee**: `{et['owner']}`\n"
-                        f"  - **Implicit Deadline**: *{et['deadline']}*\n"
-                    )
-
-            # 5. Strategic Recommendations
-            answer_lines.append("\n## 🤖 AI Coordinator Recommendations")
-            rec_count = 1
-            if blocked:
-                answer_lines.append(
-                    f"{rec_count}. **Resolve Blockers**: Contact **{blocked[0].owner.name if blocked[0].owner else 'Unassigned'}** to resolve the blockages in *\"{blocked[0].title}\"*."
-                )
-                rec_count += 1
-            if overdue:
-                answer_lines.append(
-                    f"{rec_count}. **Reschedule Overdue**: Re-align the deadline for *\"{overdue[0].title}\"* which was due *\"{overdue[0].deadline}\"*."
-                )
-                rec_count += 1
+                    sentences = [s.strip() for s in chunk.content.replace("\n", ". ").split(". ") if s.strip()]
+                    if sentences:
+                        matched_sentences.append(sentences[0])
             
-            # Default helper recommendations
-            answer_lines.append(f"{rec_count}. **Update Memory**: Ingest a new transcript or meeting note log using the right-hand Memory Panel to expand persistent organization memory.")
-            rec_count += 1
-            answer_lines.append(f"{rec_count}. **Load Balancing**: Frequently monitor workload distribution metrics on the main Dashboard to avoid team burnout.")
+            # Combine sentences into a clean paragraph
+            direct_summary = ". ".join(matched_sentences[:3])
+            if direct_summary and not direct_summary.endswith("."):
+                direct_summary += "."
+            direct_summary = direct_summary.replace("..", ".")
+                
+            # If we also have matching tasks, represent them cleanly
+            task_notes = ""
+            if matching_tasks:
+                task_notes = "\n\n## 📋 Related Action Tasks\n"
+                for t in matching_tasks[:3]:
+                    owner_name = t.owner.name if t.owner else "Unassigned"
+                    task_notes += f"- **{t.title}** (Status: *{t.status.value.upper()}*, Assignee: `{owner_name}`, Deadline: *{t.deadline or 'N/A'}*)\n"
 
-            # 6. Verification Footer
-            answer_lines.append(
-                f"\n---\n"
-                f"*🛡️ **Grounded Integrity Verification**:\n"
-                f"- **Confidence Score**: `99.4%` (Relational Grounding + Cosine Vector Retrieval)\n"
-                f"- **Hallucinations**: `0.0%` (Context boundaries fully enforced)*"
+            answer = (
+                f"# 🚀 OpsPilot Operations Briefing\n\n"
+                f"**Direct Answer**:\n"
+                f"{direct_summary}"
+                f"{task_notes}\n\n"
+                f"---\n"
+                f"**Retrieved Sources**: {', '.join(list(set(sources)))}"
             )
-
-            answer = "\n".join(answer_lines)
             
         return {
             "query": query,
             "answer": answer,
             "sources": list(set(sources)),
-            "extracted_tasks": extracted_tasks
+            "extracted_tasks": cls.extract_actionable_tasks(answer)
         }
