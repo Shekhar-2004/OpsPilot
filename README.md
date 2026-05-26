@@ -32,6 +32,7 @@ For **Recruiters & Engineers** reviewing this codebase, the following systems hi
 ### 4. 🔐 Secure Alphanumeric Team Join Codes
 *   **High-Entropy Tokens**: Generates unique, cryptographically random 6-character invite codes (e.g. `SPONS1`, `EVENT2`) on team creation.
 *   **Dynamic Visibility Propagation**: Implements a `POST /api/v1/teams/join` endpoint which maps new team memberships dynamically, instantly unlocking access to all shared tasks and document memories.
+*   **Interactive Workspace UI**: Features a click-to-copy invite key badge directly inside the team selector and a dedicated **Join Workspace** interactive modal, enabling seamless, self-guided onboarding for new members.
 
 ### 5. 🌐 Dynamic Production CORS Routing
 *   Prevents standard public-cloud preflight CORS errors (like `400 Disallowed CORS origin`) by incorporating an advanced **`allow_origin_regex`** model:
@@ -60,6 +61,10 @@ For developers reviewing problem-solving capabilities, here are two major engine
 ### 2. ⚡ Celery Background Task Gating Conflict
 *   **The Bug**: Enforcing active user credentials in `AIService.answer_query()` broke Celery asynchronous background workers (which analyze meeting transcripts and extract tasks without an active HTTP session).
 *   **The Fix**: Refactored the AI service to dynamically detect execution context. It enforces strict user-session gating on HTTP API requests while seamlessly allowing system-level queries from background Celery workers.
+
+### 3. 👥 Operations Coordinator Role Synchronization Defect
+*   **The Bug**: Modifying a user's role to "Operations Coordinator" in the Edit Profile modal only updated `localStorage` in the browser. The backend database remained unchanged (retaining the default "member" role). Thus, when coordinators attempted to create teams, the backend rejected it with a `403 Forbidden` permission error.
+*   **The Fix**: Created a new `PUT /api/v1/auth/profile` backend endpoint that synchronizes profile edits (name and role) to the PostgreSQL database. Integrated it with the frontend modal save handler so that role promotions are instantly persisted, granting instant clearance for team creation.
 
 ---
 
