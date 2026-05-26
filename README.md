@@ -1,5 +1,7 @@
 # OpsPilot — AI-Native Operational Intelligence & RAG Platform
 
+> ### 🌐 Live Production Access: [**ops-pilot-five.vercel.app**](https://ops-pilot-five.vercel.app/)
+
 OpsPilot is a premium, production-ready operational intelligence and workflow coordination platform. It transforms fragmented team conversations and unstructured meeting transcripts into structured, grounded database execution tracks using **Retrieval-Augmented Generation (RAG)**.
 
 Designed with an aesthetic of **Tactile Minimalism** and **Ornamental Restraint**, it replaces chaotic data dashboards with a calm, journal-like editorial workspace.
