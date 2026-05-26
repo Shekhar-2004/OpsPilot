@@ -10,7 +10,7 @@ Rather than describing abstract cloud infrastructures, this specification docume
 
 ```mermaid
 graph TD
-    subgraph Frontend Client [React 19 & Vite]
+    subgraph frontend ["React 19 & Vite Client"]
         A[App.jsx Shell] --> B[Dashboard.jsx Bento]
         A --> C[TeamWorkspace.jsx Kanban]
         A --> D[AIQuery.jsx Chat Console]
@@ -23,7 +23,7 @@ graph TD
         LocalStorage[(Browser LocalStorage)] <--> A
     end
 
-    subgraph FastAPI Backend Gateway [Python 3.10+]
+    subgraph backend ["FastAPI Backend Gateway (Python 3.10+)"]
         J[main.py Router Base] --> K[auth.py Controller]
         J --> L[teams.py Controller]
         J --> M[tasks.py Controller]
@@ -43,18 +43,18 @@ graph TD
         SecretKey[(.secret_key Local Cache)] --> J
     end
 
-    subgraph Celery Asynchronous Engine [Background Worker]
+    subgraph celery ["Celery Asynchronous Background Worker"]
         W[celery_app.py App Base] --> X[tasks.py Worker Tasks]
         X --> Y[process_document_chunking_task]
         X --> Z[extract_meeting_action_items_task]
     end
 
-    subgraph Message Broker & Result Storage
+    subgraph broker_sub ["Message Broker & Result Storage"]
         Broker[(Redis Container / Postgres SQLA Broker Fallback)]
         DB_Result[(PostgreSQL DB Result Store)]
     end
 
-    subgraph PostgreSQL Database [Port 5433 Host / 5432 Container]
+    subgraph db_sub ["PostgreSQL Database"]
         DB_U[users Table]
         DB_T[teams Table]
         DB_TM[team_members Table]
@@ -64,13 +64,13 @@ graph TD
         DB_M[meetings Table]
     end
 
-    %% Communication Paths
-    Frontend Client -- Axios HTTP / Bearer JWT --> FastAPI Backend Gateway
-    FastAPI Backend Gateway -- Dispatch Task Async --> Broker
-    Broker --> Celery Asynchronous Engine
-    Celery Asynchronous Engine -- Write Status / Results --> DB_Result
-    FastAPI Backend Gateway -- SQLAlchemy 2.0 ORM --> PostgreSQL Database
-    Celery Asynchronous Engine -- SQLAlchemy 2.0 ORM --> PostgreSQL Database
+    %% Communication Paths using valid Node/Subgraph links
+    A -- "Axios HTTP / Bearer JWT" --> J
+    J -- "Dispatch Task Async" --> Broker
+    Broker --> W
+    X -- "Write Status / Results" --> DB_Result
+    J -- "SQLAlchemy 2.0 ORM" --> DB_U
+    X -- "SQLAlchemy 2.0 ORM" --> DB_U
 ```
 
 ---
