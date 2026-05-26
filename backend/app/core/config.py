@@ -1,6 +1,6 @@
 import os
 import secrets
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 def get_or_generate_secret_key() -> str:
@@ -44,6 +44,9 @@ class Settings(BaseSettings):
         "DATABASE_URL", 
         "postgresql://postgres@localhost:5433/opspilot"
     )
+
+    # Gemini API Key for LIVE AI coordinator responses
+    GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", None)
 
     # Restrictive CORS origins default
     BACKEND_CORS_ORIGINS: List[str] = [

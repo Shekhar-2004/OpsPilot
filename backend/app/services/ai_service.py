@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List, Dict, Any, Tuple, Optional
 from app.models.models import Task, Document, DocumentChunk, Team
+from app.core.config import settings
 
 class AIService:
     @staticmethod
@@ -89,6 +90,61 @@ class AIService:
         return tasks
 
     @classmethod
+    def answer_query_with_gemini(cls, query: str, context_str: str) -> Optional[str]:
+        api_key = settings.GEMINI_API_KEY
+        if not api_key:
+            return None
+            
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        prompt = (
+            "You are Antigravity, the premium AI Operations Coordinator inside the OpsPilot dashboard.\n"
+            "Your job is to answer the user's operational query by synthesizing a clear, helpful, and highly rich analysis based on the grounded workspace context provided below.\n\n"
+            "Rules:\n"
+            "1. Always base your response strictly on the provided grounded database context.\n"
+            "2. Structure your answer beautifully with markdown headers, lists, and tables.\n"
+            "3. Highlight critical statuses using GitHub alert blocks:\n"
+            "   - Use `> [!CAUTION]` if there is a critical blocked task.\n"
+            "   - Use `> [!WARNING]` if there are overdue or high-priority slips.\n"
+            "   - Use `> [!NOTE]` if everything is healthy and optimal.\n"
+            "4. If the query asks about tasks, represent them in a clean Markdown Table (columns: ID, Task Name, Status, Priority, Owner, Deadline).\n"
+            "5. Extract implicit action items or follow-ups from retrieved memory document chunks if appropriate.\n"
+            "6. Provide clear, numbered coordinator recommendations at the end.\n"
+            "7. Keep a highly professional, encouraging, and operational intelligence coordinator tone.\n\n"
+            f"Grounded Context:\n{context_str}\n\n"
+            f"User Query: {query}\n\n"
+            "Synthesized Response:"
+        )
+        
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ]
+        }
+        
+        try:
+            import urllib.request
+            import json
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                res_data = json.loads(response.read().decode("utf-8"))
+                return res_data["candidates"][0]["content"]["parts"][0]["text"]
+        except Exception as e:
+            print(f"Error calling Gemini API: {str(e)}")
+            return None
+
+    @classmethod
     def answer_query(
         cls, db: Session, query: str, team_id: Optional[int] = None
     ) -> Dict[str, Any]:
@@ -151,6 +207,15 @@ class AIService:
             )
         else:
             context_str = "\n".join(context_parts)
+            
+            gemini_answer = cls.answer_query_with_gemini(query, context_str)
+            if gemini_answer:
+                return {
+                    "query": query,
+                    "answer": gemini_answer,
+                    "sources": list(set(sources)),
+                    "extracted_tasks": cls.extract_actionable_tasks(gemini_answer)
+                }
             
             # Simulate high-quality, grounded LLM synthesis
             answer_lines = [
