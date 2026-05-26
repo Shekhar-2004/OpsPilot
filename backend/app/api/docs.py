@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import random
 from app.core import deps
+from app.core.config import settings
 from app.models.models import Document, DocumentChunk, User
 from app.schemas.schemas import DocumentResponse
 
@@ -35,6 +36,24 @@ async def upload_document(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ):
+    # Enforce maximum upload file size boundaries
+    try:
+        file.file.seek(0, 2)
+        file_size = file.file.tell()
+        file.file.seek(0)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not read upload metadata: {str(e)}"
+        )
+
+    max_size_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
+    if file_size > max_size_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File exceeds maximum allowed size of {settings.MAX_UPLOAD_SIZE_MB} MB (uploaded size: {file_size / (1024 * 1024):.2f} MB)"
+        )
+
     try:
         # Read the file contents
         content_bytes = await file.read()

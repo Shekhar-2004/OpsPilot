@@ -48,6 +48,12 @@ class Settings(BaseSettings):
     # Gemini API Key for LIVE AI coordinator responses
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", None)
 
+    # Rate Limiting & Upload Thresholds (Billing & Security Control defaults)
+    AI_LIMIT_PER_MINUTE: int = int(os.getenv("AI_LIMIT_PER_MINUTE", 10))
+    AI_LIMIT_PER_DAY: int = int(os.getenv("AI_LIMIT_PER_DAY", 100))
+    MAX_UPLOAD_SIZE_MB: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", 5))
+    MAX_QUERY_CHAR_LIMIT: int = int(os.getenv("MAX_QUERY_CHAR_LIMIT", 1000))
+
     # Restrictive CORS origins default
     BACKEND_CORS_ORIGINS: List[str] = [
         origin.strip().strip('"').strip("'").rstrip('/')
