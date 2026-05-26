@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+let API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+
+// Automatically append /api/v1 if the provided URL is a base domain (e.g. misses the route path)
+if (API_BASE && !API_BASE.endsWith('/api/v1') && !API_BASE.endsWith('/api/v1/')) {
+  API_BASE = API_BASE.replace(/\/$/, '') + '/api/v1';
+}
 
 const api = axios.create({
   baseURL: API_BASE,

@@ -47,7 +47,7 @@ class Settings(BaseSettings):
 
     # Restrictive CORS origins default
     BACKEND_CORS_ORIGINS: List[str] = [
-        origin.strip()
+        origin.strip().strip('"').strip("'").rstrip('/')
         for origin in os.getenv("BACKEND_CORS_ORIGINS", "").split(",")
         if origin.strip()
     ] if os.getenv("BACKEND_CORS_ORIGINS") else [
