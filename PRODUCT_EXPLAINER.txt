@@ -1,0 +1,133 @@
+========================================================================
+                      OPSPILOT — USER GUIDE & PRODUCT EXPLAINER
+========================================================================
+
+Welcome to OpsPilot! This guide explains what this application does, 
+the problems it solves, and how to use each of its features in simple, 
+human-friendly language. No programming knowledge required!
+
+---
+
+1. THE PROBLEM OPSPILOT SOLVES
+========================================================================
+In modern business teams, important decisions and tasks are scattered 
+everywhere: in Slack messages, Zoom call transcripts, email threads, and 
+huddled discussions. 
+
+Keeping track of who promised to do what is a major headache:
+- Key action items get lost in long meeting notes.
+- Updating project trackers (like Jira or Trello) is tedious and manual.
+- Managers struggle to see who is overloaded and which tasks are blocked.
+
+OpsPilot is your AI-Native Operational Intelligence Assistant. It listens 
+to your unstructured team conversations, extracts actionable checklists 
+using Artificial Intelligence, tracks progress in visual dashboard grids, 
+safeguards team workloads, and syncs tasks directly to project trackers.
+
+---
+
+2. STEP-BY-STEP FUNCTIONALITY GUIDE
+========================================================================
+
+Follow this step-by-step guide to navigate and make the most of OpsPilot:
+
+STEP 1: The Security Gateway (Login & Registration)
+------------------------------------------------------------------------
+Before accessing the hub, you must authenticate through the gateway.
+1. Enter your Identity Email and Access Password.
+2. If you are new, click "Register" to create an account:
+   - Provide your Full Name and select your Workspace Role:
+     * Team Collaborator: Standard team member.
+     * Operations Coordinator: Manages team deliverables.
+     * System Administrator: Full system oversight.
+3. Click "Establish Connection" to access the main hub.
+
+STEP 2: Live Monitoring (The Strategic Dashboard)
+------------------------------------------------------------------------
+Once logged in, you enter the main Dashboard—a visual control panel 
+presenting the real-time health of your operations:
+1. "Strategic Overview": Shows the general system sync status.
+2. "Active AI Insights": A smart message board where the AI highlights 
+   immediate risks (e.g., critical bottlenecks or workload imbalances).
+3. "Bento Grid Cards":
+   - "Active Sprints": Shows the number of concurrent projects.
+   - "AI Streams": A live sync pulse showing the AI is processing data.
+   - "Bottlenecks": A red warning gauge highlighting stalled pipelines.
+4. "Team Operations": A list of active, high-priority tasks and who is 
+   assigned to lead them.
+5. "System Logs": A real-time timeline of background technical events.
+
+STEP 3: Team Sprints (Kanban Deliverables)
+------------------------------------------------------------------------
+Click "Team Sprints" in the navigation drawer to manage tasks visually:
+1. "Workspace Selector": Choose which team board you want to view from 
+   the dropdown at the top.
+2. "Kanban Columns": Tasks are categorized into four columns:
+   - "To Do" (Not started)
+   - "In Progress" (Active)
+   - "Blocked" (Stalled)
+   - "Completed" (Resolved)
+3. "Managing Cards":
+   - Click the "Arrow" button on a card to advance it to the next stage.
+   - If a task gets stuck, click "Block Task" to flag it in red. Click 
+     "Unblock" once resolved.
+   - Delete tasks by clicking the small trash bin icon (Admin only).
+4. "Adding Tasks & Collaborators":
+   - Click "Add Task" to input a Title, description, priority, deadline, 
+     and assign it to a team member.
+   - Click "Members" to view active team collaborators or invite new ones.
+
+STEP 4: AI Operations (Your Smart Workspace)
+------------------------------------------------------------------------
+This is the core of the platform—a split-screen AI workspace:
+1. "Left Column (Semantic Registers)":
+   - Ingest new memory into the AI by typing plain text or notes in the 
+     form and clicking "Ingest Log to Memory."
+   - Or drag and drop text (.txt) files directly into the file uploader.
+   - The AI instantly indexes these files for RAG search capability.
+2. "Right Column (AI Chat Console)":
+   - Type questions in the input bar at the bottom, or click the quick 
+     shortcut pills (e.g. "Show overdue tasks").
+   - Ask questions like: "What was discussed in the sync?" or "Are 
+     there any blockers?"
+   - The AI will formulate answers, highlighting the exact sources.
+3. "Interactive Checklists":
+   - When you ask the AI to extract tasks, it generates an interactive 
+     checklist directly inside the chat response.
+   - You can check/uncheck these items as they get completed.
+   - Click "Sync to Jira" at the bottom of the checklist. The AI will 
+     simulate a sync and lock the tasks inside your project management system!
+
+STEP 5: Alerts & Reports (Risk Control)
+------------------------------------------------------------------------
+Click "Alerts & Reports" to forecast risks and resolve bottlenecks:
+1. "Timeline Risks": Flags tasks that are overdue or close to deadline.
+2. "Execution Velocity Speedometer": A beautiful circular dial showing 
+   the percentage of tasks resolved. Your target optimal velocity is 65%.
+3. "Capacity Balance Indices": Checks team workloads:
+   - If a member is managing too many complex tasks, the system triggers 
+     a "Critical Overload" warning to alert the coordinator.
+4. "Active Pipeline Blockers & Assign AI Agent":
+   - Blocked tasks are listed with their overdue duration.
+   - Click "Assign AI Agent" next to any blocker. The system spins an 
+     automated processing wheel and assigns a specialized AI agent to 
+     mitigate the bottleneck. Once completed, the badge glows green.
+
+STEP 6: Personalization & Comfort (Dark Mode & Profiles)
+------------------------------------------------------------------------
+OpsPilot is designed to look premium and feel comfortable to work in:
+1. "Sun/Moon Toggle": Click the Sun/Moon icon in the top header bar 
+   (or bottom sidebar) to switch instantly between light and dark modes:
+   - Light mode is a warm, matte-paper Bisque that reduces eye strain.
+   - Dark mode is a deep warm Espresso chocolate theme, perfect for late 
+     night operations.
+2. "Edit Operator Profile": Click the small pencil/edit icon next to 
+   your name in the sidebar:
+   - Change your display name or role.
+   - Choose a premium cinematic executive avatar from our curated list.
+   - Click "Save Changes" to update your appearance instantly. Your 
+     preferences are saved locally and persist on page reloads!
+
+========================================================================
+Enjoy using OpsPilot to run smooth, intelligence-driven operations!
+========================================================================

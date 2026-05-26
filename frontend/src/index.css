@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #fbf9f5;
+  --color-surface: #fbf9f5;
+  --color-surface-dim: #dbdad6;
+  --color-surface-bright: #fbf9f5;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f5f3ef;
+  --color-surface-container: #efeeea;
+  --color-surface-container-high: #eae8e4;
+  --color-surface-container-highest: #e4e2de;
+  --color-on-surface: #1b1c1a;
+  --color-on-surface-variant: #4e4540;
+  --color-inverse-surface: #30312e;
+  --color-inverse-on-surface: #f2f0ed;
+  --color-outline: #7f756f;
+  --color-outline-variant: #d1c4bd;
+  --color-surface-tint: #685c55;
+  --color-primary: #170f0a;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #2d241e;
+  --color-on-primary-container: #988a82;
+  --color-inverse-primary: #d3c3ba;
+  --color-secondary: #735c00;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fed65b;
+  --color-on-secondary-container: #745c00;
+  --color-tertiary: #031508;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #162a1b;
+  --color-on-tertiary-container: #7c927e;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #f0dfd6;
+  --color-primary-fixed-dim: #d3c3ba;
+  --color-on-primary-fixed: #221a14;
+  --color-on-primary-fixed-variant: #4f453e;
+  --color-secondary-fixed: #ffe088;
+  --color-secondary-fixed-dim: #e9c349;
+  --color-on-secondary-fixed: #241a00;
+  --color-on-secondary-fixed-variant: #574500;
+  --color-tertiary-fixed: #d1e9d2;
+  --color-tertiary-fixed-dim: #b5cdb6;
+  --color-on-tertiary-fixed: #0c2011;
+  --color-on-tertiary-fixed-variant: #374c3b;
+  --color-background: #fbf9f5;
+  --color-on-background: #1b1c1a;
+  --color-surface-variant: #e4e2de;
+
+  --radius-xxl: 24px;
+  --spacing-gutter: 24px;
+  --spacing-container-max: 1440px;
+  --spacing-base: 8px;
+  --spacing-margin-desktop: 48px;
+  --spacing-margin-mobile: 16px;
+
+  --font-display: "Libre Caslon Text", serif;
+  --font-sans: "Geist", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-primary font-sans antialiased overflow-x-hidden;
+    background-color: #fbf9f5;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(115, 92, 0, 0.02) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(181, 205, 182, 0.03) 0px, transparent 50%);
+    background-attachment: fixed;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .dark body {
+    background-color: #140d09;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(233, 195, 73, 0.01) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(181, 205, 182, 0.01) 0px, transparent 50%);
+  }
+}
+
+/* Complementary Dark Mode Redefinitions */
+.dark {
+  --color-bg: #140d09;
+  --color-surface: #140d09;
+  --color-surface-bright: #140d09;
+  --color-surface-dim: #0f0a07;
+  --color-surface-container-lowest: #1c1511;
+  --color-surface-container-low: #221a15;
+  --color-surface-container: #2a201b;
+  --color-surface-container-high: #322721;
+  --color-surface-container-highest: #3d3029;
+  
+  --color-on-surface: #fbf9f5;
+  --color-on-surface-variant: #d3c3ba;
+  
+  --color-primary: #fbf9f5;
+  --color-on-primary: #140d09;
+  --color-primary-container: #eae8e4;
+  --color-on-primary-container: #1b1c1a;
+  
+  --color-secondary: #e9c349;
+  --color-on-secondary: #140d09;
+  --color-secondary-container: #735c00;
+  --color-on-secondary-container: #ffe088;
+  
+  --color-outline: #988a82;
+  --color-outline-variant: #4f453e;
+  
+  --color-background: #140d09;
+  --color-on-background: #fbf9f5;
+  --color-surface-variant: #3d3029;
+  
+  --color-tertiary: #b5cdb6;
+  --color-on-tertiary: #0c2011;
+  --color-tertiary-fixed-dim: #374c3b;
+  --color-on-tertiary-fixed-variant: #b5cdb6;
+  
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+}
+
+/* Material Symbols configuration */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Gilded Ivory Surfaces */
+.surface-card {
+  @apply bg-surface-container-lowest border border-outline-variant/30 rounded-xl;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+}
+
+.surface-card-interactive {
+  @apply bg-surface-container-lowest border border-outline-variant/30 rounded-xl cursor-pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.surface-card-interactive:hover {
+  @apply bg-surface-container-low border-outline-variant/50;
+  box-shadow: 0 4px 20px rgba(45, 36, 30, 0.04);
+}
+
+/* Technical Monospace Log Row */
+.log-row {
+  @apply font-mono text-xs leading-relaxed py-1.5 px-2.5 border-b border-outline-variant/20 last:border-0 hover:bg-surface-container transition-colors text-primary;
+}
+
+/* System indicators - Restrained Glow System */
+@keyframes sync-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    box-shadow: 0 0 8px rgba(181, 205, 182, 0.4);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 16px rgba(181, 205, 182, 0.8);
+  }
+}
+
+.indicator-pulse-healthy {
+  animation: sync-pulse 3s infinite ease-in-out;
+}
+
+/* Sage Pulse */
+.sage-pulse {
+  box-shadow: 0 0 0 0 rgba(181, 205, 182, 0.4);
+  animation: pulse-sage 2s infinite;
+}
+@keyframes pulse-sage {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(181, 205, 182, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(181, 205, 182, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(181, 205, 182, 0); }
+}
+
+/* High-density Custom Tables */
+.data-table-row {
+  @apply border-b border-outline-variant/20 hover:bg-surface-container transition-colors;
+}
+
+/* Compact Inputs */
+.console-input {
+  @apply bg-surface border-b border-t-0 border-x-0 border-outline-variant/50 focus:border-secondary focus:ring-0 focus:outline-none transition-all text-primary font-sans;
+}
+
+/* monospaced counts */
+.mono-display {
+  @apply font-mono font-bold tracking-tight text-primary;
+}
+
+/* Editorial rule divider */
+.editorial-rule {
+  position: relative;
+}
+.editorial-rule::after {
+  content: "◆";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-bg);
+  padding: 0 12px;
+  color: var(--color-outline-variant);
+  font-size: 10px;
+}

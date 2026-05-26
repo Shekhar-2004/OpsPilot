@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OpsPilot | System Bottlenecks</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#221a14",
+                    "error": "#ba1a1a",
+                    "surface-bright": "#fbf9f5",
+                    "secondary-fixed": "#ffe088",
+                    "surface-container": "#efeeea",
+                    "secondary": "#735c00",
+                    "on-tertiary-fixed": "#0c2011",
+                    "outline": "#7f756f",
+                    "on-secondary-container": "#745c00",
+                    "on-surface": "#1b1c1a",
+                    "on-surface-variant": "#4e4540",
+                    "primary-fixed-dim": "#d3c3ba",
+                    "surface": "#fbf9f5",
+                    "tertiary-container": "#162a1b",
+                    "primary-fixed": "#f0dfd6",
+                    "outline-variant": "#d1c4bd",
+                    "on-tertiary-container": "#7c927e",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#574500",
+                    "primary-container": "#2d241e",
+                    "on-background": "#1b1c1a",
+                    "inverse-primary": "#d3c3ba",
+                    "surface-container-low": "#f5f3ef",
+                    "on-primary-container": "#988a82",
+                    "on-tertiary-fixed-variant": "#374c3b",
+                    "background": "#fbf9f5",
+                    "secondary-fixed-dim": "#e9c349",
+                    "tertiary": "#031508",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#fed65b",
+                    "surface-tint": "#685c55",
+                    "primary": "#170f0a",
+                    "surface-container-highest": "#e4e2de",
+                    "tertiary-fixed": "#d1e9d2",
+                    "inverse-on-surface": "#f2f0ed",
+                    "surface-dim": "#dbdad6",
+                    "surface-container-high": "#eae8e4",
+                    "on-secondary-fixed": "#241a00",
+                    "tertiary-fixed-dim": "#b5cdb6",
+                    "on-primary-fixed-variant": "#4f453e",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "inverse-surface": "#30312e",
+                    "on-primary": "#ffffff",
+                    "surface-variant": "#e4e2de",
+                    "on-tertiary": "#ffffff",
+                    "terracotta": "#C36A59"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "container-max": "1440px",
+                    "base": "8px",
+                    "margin-desktop": "48px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Libre Caslon Text"],
+                    "display-lg-mobile": ["Libre Caslon Text"],
+                    "headline-md": ["Libre Caslon Text"],
+                    "label-md": ["Geist"],
+                    "body-lg": ["Geist"],
+                    "body-md": ["Geist"],
+                    "label-sm": ["Geist"],
+                    "display-lg": ["Libre Caslon Text"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                    "display-lg-mobile": ["36px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fbf9f5; /* Bisque */
+            color: #170f0a; /* Espresso */
+        }
+        .masonry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-auto-rows: 10px;
+            gap: 24px;
+        }
+        .masonry-item {
+            grid-row-end: span 24;
+        }
+        .masonry-item-large {
+            grid-row-end: span 36;
+        }
+        .masonry-item-small {
+            grid-row-end: span 20;
+        }
+        .terracotta-glow {
+            box-shadow: 0 0 15px rgba(195, 106, 89, 0.15);
+        }
+        .glass-nav {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .gold-border {
+            border: 1px solid rgba(115, 92, 0, 0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased">
+<!-- TopAppBar (Shared Component) -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 glass-nav border-b border-outline-variant/30 flex justify-between items-center px-margin-desktop py-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer active:opacity-70 transition-opacity" data-icon="menu">menu</span>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">OpsPilot</h1>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-8">
+<a class="font-label-md text-label-md text-on-surface-variant hover:bg-secondary-container/20 px-3 py-1 rounded transition-colors" href="#">Intelligence</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:bg-secondary-container/20 px-3 py-1 rounded transition-colors" href="#">Assistant</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:bg-secondary-container/20 px-3 py-1 rounded transition-colors" href="#">Streams</a>
+<a class="font-label-md text-label-md text-primary font-bold border-b-2 border-primary" href="#">Bottlenecks</a>
+</nav>
+<div class="h-10 w-10 rounded-full bg-secondary-container overflow-hidden gold-border">
+<img alt="Profile" data-alt="A professional studio portrait of an executive user with a refined aesthetic. The lighting is soft and intentional, emphasizing a calm, authoritative presence. The background is a muted ivory, aligning with a high-end B2B corporate style. The image is crisp and elegant, using a sophisticated tonal palette of warm whites and deep espressos." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBW8OD-wQG-jAbZ7UsB6pFrWvhXpqt3vHr0Tfruh8jUmKzsfkHwLKHCmYb9mNyEnGB-W2TY_RWcJqmlp_EwvCMblJi_49gXrDx083OD-fxkxDoBRcy_J4s115HkUXuLrysx2aqZnOpE7a0gQskNs0n4TeKEla854fmkWU__X8fBB7N9FCrRv-K-7RRYt32yG1xndXYbmTCnxqt_kp76SV5B1ZxCn2K6Swb-E3JHk6vBcf52AKAydFVOoLFTKEtXL4ZLDElKYdWhR68"/>
+</div>
+</div>
+</header>
+<div class="flex pt-24 min-h-screen">
+<!-- NavigationDrawer (Shared Component) -->
+<aside class="hidden md:flex flex-col h-[calc(100vh-80px)] w-72 bg-surface-container-low p-6 gap-4 border-r border-outline-variant/30 shadow-sm sticky top-20">
+<div class="mb-8">
+<h2 class="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant/60">Operational Hub</h2>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest/50 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="font-label-md text-label-md">Intelligence</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest/50 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-md text-label-md">Assistant</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-on-surface-variant hover:bg-surface-container-highest/50 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_feed">dynamic_feed</span>
+<span class="font-label-md text-label-md">Streams</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg text-secondary font-bold bg-secondary-container/10 border-r-2 border-secondary transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="error_med">error_med</span>
+<span class="font-label-md text-label-md">Bottlenecks</span>
+</a>
+</nav>
+<div class="mt-auto p-4 bg-surface-bright rounded-xl gold-border">
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-2">System Health</p>
+<div class="w-full bg-outline-variant/20 h-1 rounded-full overflow-hidden">
+<div class="bg-terracotta h-full w-[65%]"></div>
+</div>
+<p class="font-label-sm text-label-sm text-terracotta mt-2 font-bold">Action Required</p>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 px-margin-mobile md:px-margin-desktop pb-24">
+<header class="mb-12">
+<div class="flex items-baseline gap-4 mb-2">
+<h2 class="font-display-lg text-display-lg text-primary">System Bottlenecks</h2>
+<span class="text-terracotta font-headline-md text-headline-md">● 3 Critical</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Real-time identification of operational friction points. These anomalies represent immediate threats to system efficiency and require executive intervention or AI delegation.</p>
+</header>
+<!-- Masonry Grid Layout -->
+<div class="masonry-grid">
+<!-- Critical Latency Tile -->
+<article class="masonry-item-large bg-surface-container-lowest p-6 rounded-xl gold-border terracotta-glow flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<span class="px-3 py-1 bg-terracotta/10 text-terracotta rounded-full font-label-sm text-label-sm uppercase tracking-tighter">High Severity</span>
+<span class="material-symbols-outlined text-terracotta" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-4">Database Read/Write Latency</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 flex-grow">
+                        The primary transaction cluster is experiencing a sustained 450ms delay in I/O operations. Originating from the APAC region, this bottleneck is currently impacting 12% of total checkout throughput.
+                    </p>
+<div class="space-y-6 mb-8">
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+<span class="font-label-md text-label-md text-on-surface-variant/70 uppercase">Peak Latency</span>
+<span class="font-headline-md text-headline-md text-primary">892ms</span>
+</div>
+<div class="flex justify-between items-center border-b border-outline-variant/20 pb-2">
+<span class="font-label-md text-label-md text-on-surface-variant/70 uppercase">Affected Users</span>
+<span class="font-headline-md text-headline-md text-primary">4.2k</span>
+</div>
+</div>
+<button class="w-full py-4 bg-primary text-surface-bright rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity gold-border">
+                        Assign AI Agent
+                    </button>
+</article>
+<!-- AI Insight Card -->
+<article class="masonry-item bg-surface-bright p-8 rounded-xl border-2 border-dashed border-secondary/30 flex flex-col justify-center items-center text-center">
+<div class="w-16 h-16 bg-gradient-to-br from-secondary-container to-surface-bright rounded-full flex items-center justify-center mb-6 gold-border">
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-2 italic">Predictive Prevention</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        OpsPilot AI predicts a 24% increase in memory fragmentation over the next 6 hours. Early remediation is advised.
+                    </p>
+<div class="mt-6 w-full border-t border-outline-variant/30 pt-4">
+<span class="font-label-sm text-label-sm text-secondary font-bold tracking-widest uppercase">Active Intelligence Engaged</span>
+</div>
+</article>
+<!-- Memory Leak Tile -->
+<article class="masonry-item-small bg-surface-container-lowest p-6 rounded-xl gold-border flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="px-3 py-1 bg-secondary-container/30 text-secondary rounded-full font-label-sm text-label-sm uppercase">Optimizing</span>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="memory">memory</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-2">Memory Leak: Service-V4</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+                        Recursive loop detected in telemetry ingestion module. Resource consumption rising linearly.
+                    </p>
+<button class="mt-auto py-2 px-4 border border-primary text-primary rounded-lg font-label-md text-label-md hover:bg-primary hover:text-surface-bright transition-all">
+                        View Trace
+                    </button>
+</article>
+<!-- Visual Data Visualization Tile -->
+<article class="masonry-item-large bg-surface-container-lowest overflow-hidden rounded-xl gold-border flex flex-col">
+<div class="p-6">
+<h3 class="font-headline-md text-headline-md mb-1">Global Traffic Congestion</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Real-time Heatmap</p>
+</div>
+<div class="flex-grow bg-surface-variant relative">
+<img alt="Data Map" class="w-full h-full object-cover grayscale opacity-80" data-alt="A high-resolution data visualization heatmap overlaid on a dark world map. The visual style is minimalist and editorial, with soft terracotta glowing nodes indicating system stress points. The aesthetic is clean and B2B-focused, avoiding cluttered neon tropes in favor of sophisticated gold and ivory accents. Lighting is ambient and atmospheric." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4wzABmI0wiVfX8v7eZLR9U_yHk5-_D89JuKNcPWyLKtU6pP0RZKJ7U3CYC8tGOXVB2baioiyU3qPxKL2h69JLy8T05bZf5OtTe1Wj0CGg7lB_m93fz-kSaba1ryFAPMNWNUhAnczQhXx3quAfKnctBn9H47vxL0cOYHIFOhNufhMxh7vUthNc10mhLmbm8YGdD1BOj7uqLEXz_OzFmrv_IIalW6IG3xYclfvzfs2cwgfS7EexWDz5bR-DzXw6BA5Q-hGowLmyfRU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest to-transparent"></div>
+</div>
+<div class="p-6 flex justify-between items-center bg-surface-container-lowest">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Congestion Index</p>
+<p class="font-headline-md text-headline-md">High (8.4)</p>
+</div>
+<button class="px-6 py-2 bg-primary text-surface-bright rounded-lg font-label-md text-label-md gold-border">
+                            Scale Nodes
+                        </button>
+</div>
+</article>
+<!-- Thread Starvation Tile -->
+<article class="masonry-item bg-terracotta text-surface-bright p-6 rounded-xl flex flex-col terracotta-glow">
+<div class="flex justify-between items-start mb-6">
+<span class="material-symbols-outlined text-3xl" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-label-sm text-label-sm font-bold bg-white/20 px-2 py-1 rounded">CRITICAL</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-2 text-surface-bright">Thread Starvation</h3>
+<p class="font-body-md text-body-md text-surface-bright/80 mb-6">
+                        Legacy payroll processor is holding mutex locks for excessive durations. System-wide freeze imminent.
+                    </p>
+<button class="mt-auto py-3 bg-surface-bright text-terracotta rounded-lg font-label-md text-label-md font-bold uppercase tracking-wider">
+                        Emergency Reset
+                    </button>
+</article>
+<!-- API Rate Limit Tile -->
+<article class="masonry-item-small bg-surface-container-lowest p-6 rounded-xl gold-border flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="px-3 py-1 bg-on-surface-variant/10 text-on-surface-variant rounded-full font-label-sm text-label-sm uppercase">Throttled</span>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="api">api</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-2">API Rate Limiting</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Third-party payment gateway is rejecting 4% of sync requests due to rate limits.
+                    </p>
+<div class="mt-4 flex gap-2">
+<div class="h-1.5 w-full bg-outline-variant/30 rounded-full">
+<div class="h-full w-[96%] bg-secondary rounded-full"></div>
+</div>
+</div>
+</article>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Shared Component) - Mobile Only -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface-bright/90 backdrop-blur-2xl border-t border-outline-variant/50 flex justify-around items-center h-20 px-margin-mobile pb-safe">
+<div class="flex flex-col items-center justify-center text-on-surface-variant/70 pt-2 active:scale-95 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant/70 pt-2 active:scale-95 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" data-icon="temp_agent">support_agent</span>
+<span class="font-label-sm text-label-sm">Assistant</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant/70 pt-2 active:scale-95 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" data-icon="sync_alt">sync_alt</span>
+<span class="font-label-sm text-label-sm">Live Feed</span>
+</div>
+<div class="flex flex-col items-center justify-center text-primary font-semibold border-t-2 border-secondary pt-2 active:scale-95 transition-transform cursor-pointer">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+<span class="font-label-sm text-label-sm">Issues</span>
+</div>
+</nav>
+<script>
+        // Micro-interaction for masonry card hovering
+        document.querySelectorAll('article').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+                card.style.transition = 'transform 0.3s ease-out';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Simple Fade-in effect on load
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.8s ease-in';
+            requestAnimationFrame(() => {
+                document.body.style.opacity = '1';
+            });
+        });
+    </script>
+</body></html>
