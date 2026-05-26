@@ -33,8 +33,16 @@ def seed_database():
         db.refresh(sneha)
         
         print("Creating operational teams...")
-        sponsorship_team = Team(name="Sponsorship Operations", description="Securing funding, managing sponsor relations, and delivering sponsor deliverables.")
-        event_team = Team(name="Event Coordination", description="Logistics, venue reservations, catering coordination, and schedule management.")
+        sponsorship_team = Team(
+            name="Sponsorship Operations",
+            description="Securing funding, managing sponsor relations, and delivering sponsor deliverables.",
+            invite_code="SPONS1"
+        )
+        event_team = Team(
+            name="Event Coordination",
+            description="Logistics, venue reservations, catering coordination, and schedule management.",
+            invite_code="EVENT2"
+        )
         
         # Add members to teams
         sponsorship_team.members.extend([rahul, priya, sneha])

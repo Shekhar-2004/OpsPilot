@@ -38,10 +38,14 @@ class TeamCreate(TeamBase):
 
 class TeamResponse(TeamBase):
     id: int
+    invite_code: Optional[str] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+class JoinTeamRequest(BaseModel):
+    invite_code: str
 
 class TeamDetailResponse(TeamResponse):
     members: List[UserResponse] = []

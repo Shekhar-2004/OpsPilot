@@ -1,9 +1,10 @@
+import secrets
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.core import deps
 from app.models.models import Team, User, UserRole
-from app.schemas.schemas import TeamCreate, TeamResponse, TeamDetailResponse, AddTeamMemberRequest
+from app.schemas.schemas import TeamCreate, TeamResponse, TeamDetailResponse, AddTeamMemberRequest, JoinTeamRequest
 
 router = APIRouter()
 
@@ -27,7 +28,12 @@ def create_team(
             detail="A team with this name already exists."
         )
         
-    team = Team(name=team_in.name, description=team_in.description)
+    # Generate unique 6-character alphanumeric invite code
+    invite_code = secrets.token_hex(3)
+    while db.query(Team).filter(Team.invite_code == invite_code).first():
+        invite_code = secrets.token_hex(3)
+        
+    team = Team(name=team_in.name, description=team_in.description, invite_code=invite_code)
     team.members.append(current_user)  # Creator automatically becomes member
     db.add(team)
     db.commit()
@@ -94,6 +100,30 @@ def add_team_member(
         )
         
     team.members.append(user_to_add)
+    db.commit()
+    db.refresh(team)
+    return team
+
+@router.post("/join", response_model=TeamDetailResponse)
+def join_team(
+    join_in: JoinTeamRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    team = db.query(Team).filter(Team.invite_code == join_in.invite_code.strip()).first()
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invalid team invite code. Please verify the code and try again."
+        )
+        
+    if current_user in team.members:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You are already a member of this team."
+        )
+        
+    team.members.append(current_user)
     db.commit()
     db.refresh(team)
     return team

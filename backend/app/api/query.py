@@ -42,7 +42,8 @@ def execute_query(
         res = AIService.answer_query(
             db=db,
             query=query_in.query,
-            team_id=query_in.team_id
+            team_id=query_in.team_id,
+            current_user=current_user
         )
         return res
     except HTTPException as he:

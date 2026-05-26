@@ -2,7 +2,7 @@ import random
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List, Dict, Any, Tuple, Optional
-from app.models.models import Task, Document, DocumentChunk, Team
+from app.models.models import Task, Document, DocumentChunk, Team, User
 from app.core.config import settings
 
 class AIService:
@@ -22,10 +22,18 @@ class AIService:
 
     @classmethod
     def query_semantic_chunks(
-        cls, db: Session, query: str, top_k: int = 3
+        cls, db: Session, query: str, allowed_uploaders: List[str], top_k: int = 3
     ) -> List[Tuple[DocumentChunk, float]]:
-        # Retrieve all chunks
-        all_chunks = db.query(DocumentChunk).all()
+        if not allowed_uploaders:
+            return []
+            
+        # Retrieve all chunks belonging to allowed uploaders
+        all_chunks = (
+            db.query(DocumentChunk)
+            .join(Document)
+            .filter(Document.uploaded_by.in_(allowed_uploaders))
+            .all()
+        )
         if not all_chunks:
             return []
             
@@ -141,16 +149,28 @@ class AIService:
 
     @classmethod
     def answer_query(
-        cls, db: Session, query: str, team_id: Optional[int] = None
+        cls, db: Session, query: str, team_id: Optional[int] = None, current_user: Optional[User] = None
     ) -> Dict[str, Any]:
         query_lower = query.lower()
         sources = []
         extracted_tasks = []
         
-        # 1. Fetch relevant tasks
+        # Enforce strict user and tenant privacy
+        if current_user is None:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=401, detail="Authentication required for query processing.")
+            
+        allowed_team_ids = [t.id for t in current_user.teams]
+        
+        # 1. Fetch relevant tasks, gated by user's team membership boundaries
         task_query = db.query(Task)
-        if team_id:
+        if team_id is not None:
+            if team_id not in allowed_team_ids:
+                from fastapi import HTTPException
+                raise HTTPException(status_code=403, detail="Access denied to the specified team workspace.")
             task_query = task_query.filter(Task.team_id == team_id)
+        else:
+            task_query = task_query.filter(Task.team_id.in_(allowed_team_ids))
             
         all_tasks = task_query.all()
         
@@ -164,8 +184,15 @@ class AIService:
             ):
                 matching_tasks.append(t)
                 
-        # 2. Fetch semantic document chunks
-        semantic_matches = cls.query_semantic_chunks(db, query, top_k=2)
+        # Resolve names of teammates belonging to the user's teams to filter uploaded documents
+        allowed_uploaders = []
+        for team in current_user.teams:
+            for u in team.members:
+                allowed_uploaders.append(u.name)
+        allowed_uploaders = list(set(allowed_uploaders))
+        
+        # 2. Fetch isolated semantic document chunks uploaded by team members
+        semantic_matches = cls.query_semantic_chunks(db, query, allowed_uploaders=allowed_uploaders, top_k=2)
         
         # Compile grounding context
         context_parts = []
@@ -189,8 +216,8 @@ class AIService:
         # Synthesize answering text
         if not context_parts:
             # General fallback answering using standard team info
-            teams = db.query(Team).all()
-            teams_str = ", ".join([t.name for t in teams]) if teams else "None"
+            user_teams = current_user.teams
+            teams_str = ", ".join([t.name for t in user_teams]) if user_teams else "None"
             answer = (
                 f"I checked the OpsPilot operational database but couldn't find any direct matches "
                 f"for **\"{query}\"** in active tasks or documents.\n\n"
