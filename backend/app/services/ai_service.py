@@ -22,16 +22,16 @@ class AIService:
 
     @classmethod
     def query_semantic_chunks(
-        cls, db: Session, query: str, allowed_uploaders: List[str], top_k: int = 3
+        cls, db: Session, query: str, allowed_team_ids: List[int], top_k: int = 3
     ) -> List[Tuple[DocumentChunk, float]]:
-        if not allowed_uploaders:
+        if not allowed_team_ids:
             return []
             
-        # Retrieve all chunks belonging to allowed uploaders
+        # Retrieve all chunks belonging to allowed team workspaces
         all_chunks = (
             db.query(DocumentChunk)
             .join(Document)
-            .filter(Document.uploaded_by.in_(allowed_uploaders))
+            .filter(Document.team_id.in_(allowed_team_ids))
             .all()
         )
         if not all_chunks:
@@ -155,22 +155,27 @@ class AIService:
         sources = []
         extracted_tasks = []
         
-        # Enforce strict user and tenant privacy
-        if current_user is None:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=401, detail="Authentication required for query processing.")
+        # Determine allowed team IDs (or allow all if internal/background Celery bypass without user session)
+        if current_user is not None:
+            allowed_team_ids = [t.id for t in current_user.teams]
+        else:
+            # Internal/celery background bypass: allow all teams
+            all_teams = db.query(Team).all()
+            allowed_team_ids = [t.id for t in all_teams]
             
-        allowed_team_ids = [t.id for t in current_user.teams]
-        
         # 1. Fetch relevant tasks, gated by user's team membership boundaries
         task_query = db.query(Task)
-        if team_id is not None:
-            if team_id not in allowed_team_ids:
-                from fastapi import HTTPException
-                raise HTTPException(status_code=403, detail="Access denied to the specified team workspace.")
-            task_query = task_query.filter(Task.team_id == team_id)
+        if current_user is not None:
+            if team_id is not None:
+                if team_id not in allowed_team_ids:
+                    from fastapi import HTTPException
+                    raise HTTPException(status_code=403, detail="Access denied to the specified team workspace.")
+                task_query = task_query.filter(Task.team_id == team_id)
+            else:
+                task_query = task_query.filter(Task.team_id.in_(allowed_team_ids))
         else:
-            task_query = task_query.filter(Task.team_id.in_(allowed_team_ids))
+            if team_id is not None:
+                task_query = task_query.filter(Task.team_id == team_id)
             
         all_tasks = task_query.all()
         
@@ -184,15 +189,8 @@ class AIService:
             ):
                 matching_tasks.append(t)
                 
-        # Resolve names of teammates belonging to the user's teams to filter uploaded documents
-        allowed_uploaders = []
-        for team in current_user.teams:
-            for u in team.members:
-                allowed_uploaders.append(u.name)
-        allowed_uploaders = list(set(allowed_uploaders))
-        
-        # 2. Fetch isolated semantic document chunks uploaded by team members
-        semantic_matches = cls.query_semantic_chunks(db, query, allowed_uploaders=allowed_uploaders, top_k=2)
+        # 2. Fetch isolated semantic document chunks uploaded for allowed team workspaces
+        semantic_matches = cls.query_semantic_chunks(db, query, allowed_team_ids=allowed_team_ids, top_k=2)
         
         # Compile grounding context
         context_parts = []

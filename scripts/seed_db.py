@@ -130,6 +130,7 @@ def seed_database():
         doc = Document(
             file_name="sponsorship_sync_may24.txt",
             uploaded_by="Rahul",
+            team_id=sponsorship_team.id,
             embedding_status="processing"
         )
         db.add(doc)

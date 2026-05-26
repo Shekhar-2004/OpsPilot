@@ -92,6 +92,7 @@ class DocumentResponse(BaseModel):
     id: int
     file_name: str
     uploaded_by: str
+    team_id: int
     embedding_status: str
     created_at: datetime
 

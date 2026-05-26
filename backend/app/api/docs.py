@@ -33,9 +33,18 @@ def generate_mock_embedding(dimensions: int = 128) -> List[float]:
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
     file: UploadFile = File(...),
+    team_id: int = Form(...),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ):
+    # Enforce team membership check
+    allowed_team_ids = [t.id for t in current_user.teams]
+    if team_id not in allowed_team_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden. You are not a member of this team."
+        )
+
     # Enforce maximum upload file size boundaries
     try:
         file.file.seek(0, 2)
@@ -71,6 +80,7 @@ async def upload_document(
     doc = Document(
         file_name=file.filename,
         uploaded_by=current_user.name,
+        team_id=team_id,
         embedding_status="processing"
     )
     db.add(doc)
@@ -108,9 +118,18 @@ async def upload_document(
 def submit_text_log(
     file_name: str = Form(...),
     content: str = Form(...),
+    team_id: int = Form(...),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ):
+    # Enforce team membership check
+    allowed_team_ids = [t.id for t in current_user.teams]
+    if team_id not in allowed_team_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden. You are not a member of this team."
+        )
+
     # Support for adding transcriptions or plain text logs directly via form
     if not content.strip():
         raise HTTPException(status_code=400, detail="Content cannot be empty.")
@@ -118,6 +137,7 @@ def submit_text_log(
     doc = Document(
         file_name=file_name,
         uploaded_by=current_user.name,
+        team_id=team_id,
         embedding_status="processing"
     )
     db.add(doc)
@@ -150,7 +170,8 @@ def list_documents(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ):
-    return db.query(Document).order_by(Document.created_at.desc()).all()
+    allowed_team_ids = [t.id for t in current_user.teams]
+    return db.query(Document).filter(Document.team_id.in_(allowed_team_ids)).order_by(Document.created_at.desc()).all()
 
 @router.delete("/{doc_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_document(
@@ -161,6 +182,13 @@ def delete_document(
     doc = db.query(Document).filter(Document.id == doc_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found.")
+        
+    allowed_team_ids = [t.id for t in current_user.teams]
+    if doc.team_id not in allowed_team_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden. You cannot delete a document from another team's workspace."
+        )
         
     db.delete(doc)
     db.commit()

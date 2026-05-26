@@ -82,11 +82,13 @@ class Document(Base):
     id = Column(Integer, primary_key=True, index=True)
     file_name = Column(String(255), nullable=False)
     uploaded_by = Column(String(100), nullable=False)
+    team_id = Column(Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False)
     embedding_status = Column(String(50), default="pending")  # pending, completed, failed
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
+    team = relationship("Team")
 
 class DocumentChunk(Base):
     __tablename__ = "document_chunks"
